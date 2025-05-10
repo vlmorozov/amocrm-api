@@ -8,3 +8,9 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+/.idea/.gitignore
+/.idea/amocrm-api.iml
+/.idea/dataSources.xml
+/.idea/modules.xml
+/.idea/php.xml
+/.idea/vcs.xml
