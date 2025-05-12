@@ -20,8 +20,22 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
+            
             cd ${{ secrets.PROJECT_PATH }}
+            
+            echo "Pull latest changes from main branch"
             git pull origin main
-            [ -f .env.example ] && [ ! -f .env ] && cp .env.example .env
-            [ -f docker-compose.prod.yml ] && cp docker-compose.prod.yml docker-compose.override.yml
-            docker compose down --remove-orphans && docker compose up -d --build
+            
+            echo "Restart service"
+            docker compose -f docker-compose.yml down --remove-orphans
+            docker compose -f docker-compose.yml up -d --build
+            
+            echo "Executing migrations"
+            docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction
+
+            echo "Cache clear and warmup"
+            docker compose exec -T app php bin/console cache:clear
+            docker compose exec -T app php bin/console cache:warmup
+            
+            echo "Done"

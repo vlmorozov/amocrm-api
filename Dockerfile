@@ -5,6 +5,7 @@ WORKDIR /var/www/html
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
+    supervisor \
     git \
     unzip \
     libpq-dev \
@@ -12,8 +13,7 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     zip \
     curl \
-    && docker-php-ext-install intl \
-    && docker-php-ext-install zip \
+    && docker-php-ext-install intl zip pdo pdo_pgsql opcache \
     && pecl install redis \
     && docker-php-ext-enable redis
 
@@ -23,14 +23,18 @@ COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 # Copy existing application directory
 COPY . /var/www/html
 
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
+RUN composer install --optimize-autoloader --no-interaction
+
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
 
-CMD ["php-fpm", "-F"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 FROM nginx:latest AS nginx_builder
 

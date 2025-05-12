@@ -22,3 +22,28 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Service\ApiProvider\AmoCrm\OAuthConfig:
+        arguments:
+            $integrationId: '%env(AMOCRM_CLIENT_ID)%'
+            $secretKey: '%env(AMOCRM_CLIENT_SECRET)%'
+            $redirectDomain: '%env(AMOCRM_CLIENT_REDIRECT_URI)%'
+
+    AmoCRM\OAuth\OAuthConfigInterface: '@App\Service\ApiProvider\AmoCrm\OAuthConfig'
+
+    App\Service\ApiProvider\AmoCrm\OAuthService:
+        arguments:
+            $repository: '@App\Repository\ApiTokenRepository'
+
+    AmoCRM\Client\AmoCRMApiClientFactory:
+        arguments:
+            $oAuthConfig: '@AmoCRM\OAuth\OAuthConfigInterface'
+            $oAuthService: '@App\Service\ApiProvider\AmoCrm\OAuthService'
+
+    AmoCRM\Client\AmoCRMApiClient:
+        factory: ['@AmoCRM\Client\AmoCRMApiClientFactory', 'make']
+        public: true
+        calls:
+            - method: setAccountBaseDomain
+              arguments:
+                - '%env(AMOCRM_CLIENT_SUBDOMAIN)%'
