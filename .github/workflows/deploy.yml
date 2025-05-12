@@ -28,8 +28,8 @@ jobs:
             git pull origin main
             
             echo "Restart service"
-            docker compose -f docker-compose.yml down --remove-orphans
-            docker compose -f docker-compose.yml up -d --build
+            docker compose -f docker-compose.yaml down --remove-orphans
+            docker compose -f docker-compose.yaml --env-file .env --env-file .env.local up -d --build
             
             echo "Executing migrations"
             docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction
